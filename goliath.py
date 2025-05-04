@@ -1,3 +1,14 @@
+# Auto-install dependencies
+import subprocess, sys
+
+required = ["pyautogui", "keyboard", "pillow"]
+for pkg in required:
+    try:
+        __import__(pkg)
+    except ImportError:
+        print(f"[📦] Installing missing package: {pkg}")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+
 import pyautogui
 import time
 import keyboard
