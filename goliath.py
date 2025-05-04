@@ -130,7 +130,7 @@ def main():
             if click_if_found("colossal.png"):
                 time.sleep(3)
                 check_for_exit()
-                if click_first_found("stormlord.png", "scaled_stormlord.png"):
+                if click_first_found("stormlord.png", "scaled_stormlord.png", "semi_stormlord.png"):
                     time.sleep(3)
                     check_for_exit()
                     click_first_found("enchanted_stormlord.png", "scaled_enchanted_stormlord.png")
@@ -140,7 +140,7 @@ def main():
             if click_if_found("colossal.png"):
                 time.sleep(3)
                 check_for_exit()
-                if click_first_found("bats.png", "scaled_bats.png"):
+                if click_first_found("bats.png", "scaled_bats.png", "semi_bats.png"):
                     time.sleep(3)
                     check_for_exit()
                     if click_if_found("enchanted_bats.png"):
