@@ -35,24 +35,27 @@ def click_first_found(*image_names):
 
 def click_enemy():
     check_for_exit()
-    try:
-        location = pyautogui.locateCenterOnScreen(
-            f"{config.ASSET_PATH}enemy.png",
-            confidence=config.CONFIDENCE
-        )
-        if location:
-            pyautogui.moveTo(location)
-            pyautogui.click()
-            if config.VERBOSE:
-                print(f"[+] Clicked enemy at {location}")
-            return True
-        else:
-            if config.VERBOSE:
-                print("[!] Enemy not found on screen.")
-            return False
-    except Exception as e:
-        print(f"[!] Error locating enemy: {e}")
-        return False
+    image_names = ["goliath3.png", "enemy.png", "enemy_aura.png", "goliath.png", "goliath2.png"]
+
+    for image_name in image_names:
+        try:
+            location = pyautogui.locateCenterOnScreen(
+                f"{config.ASSET_PATH}{image_name}",
+                confidence=config.CONFIDENCE
+            )
+            if location:
+                pyautogui.moveTo(location)
+                pyautogui.click()
+                if config.VERBOSE:
+                    print(f"[+] Clicked enemy using {image_name} at {location}")
+                return True
+            elif config.VERBOSE:
+                print(f"[~] {image_name} not found.")
+        except Exception as e:
+            print(f"[!] Error searching for {image_name}: {e}")
+
+    print("[!] Enemy not found using any fallback images.")
+    return False
 
 def wait_for_turn_ready():
     print(f"[~] Waiting {config.POST_CLICK_DELAY} seconds before checking for next turn...")
@@ -83,23 +86,29 @@ def wait_for_turn_ready():
 
         time.sleep(1)
 
-def click_pet():
+def hover_eye():
     try:
-        location = pyautogui.locateCenterOnScreen(f"{config.ASSET_PATH}pet.png", confidence=config.CONFIDENCE)
+        location = pyautogui.locateCenterOnScreen(f"{config.ASSET_PATH}eye.png", confidence=config.CONFIDENCE)
         if location:
             pyautogui.moveTo(location)
-            pyautogui.click()
             if config.VERBOSE:
-                print(f"[~] Clicked pet at {location} to reset zoom")
-            time.sleep(0.5)
+                print(f"[~] Hovered over eye icon at {location} to reset card zoom")
+            time.sleep(0.5)  # brief pause for UI to react
             return True
         else:
-            print("[!] Pet not found.")
+            if config.VERBOSE:
+                print("[!] Eye icon not found on screen.")
             return False
     except pyautogui.ImageNotFoundException:
-        print("[!] Pet image not found at all.")
+        if config.VERBOSE:
+            print("[!] eye.png not detected.")
         return False
-
+    
+def press_colossal_then_hover():
+    found = click_if_found("colossal.png")
+    hover_eye()
+    time.sleep(1)
+    return found
 
 def check_for_exit():
     if keyboard.is_pressed(config.STOP_HOTKEY):
@@ -108,10 +117,16 @@ def check_for_exit():
 
 
 def main():
+    start_time = time.time()
     print("🔃 Bot is starting in idle mode.")
     print("🕒 Waiting for first battle to begin (draw button to appear)...")
 
     while True:
+        # ⏱️ Exit after 2 hours
+        if time.time() - start_time > 2 * 60 * 60:
+            print("[⏱️] Time limit reached. Exiting bot after 2 hours.")
+            sys.exit(0)
+
         check_for_exit()
         try:
             found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
@@ -129,93 +144,122 @@ def main():
 
     while True:
         check_for_exit()
+        hover_eye()
         print(f"\n=== TURN {turn} ===")
 
         if turn == 1:
             click_if_found("draw_button.png")
             time.sleep(2.5)
             click_if_found("darkwind.png")
-            click_pet()
 
         elif turn == 2:
             click_if_found("galvanic.png")
-            click_pet()
 
         elif turn == 3:
-            if not click_if_found("colossal.png"):
-                print("[!] Colossal not found. Moving to player and retrying...")
-                click_pet()
-                time.sleep(1)
-                if not click_if_found("colossal.png"):
-                    print("[✖] Still not found. Skipping Turn 3.")
-                    continue
+            if not press_colossal_then_hover():
+                print("[✖] Colossal not found. Skipping Turn 3.")
+                continue
 
-            time.sleep(3)
-            click_pet()
             check_for_exit()
 
             if not click_first_found("stormlord.png", "scaled_stormlord.png", "semi_stormlord.png"):
                 print("[!] Storm Lord not found. Moving to player and retrying...")
-                click_pet()
+                hover_eye()
                 time.sleep(1)
                 if not click_first_found("stormlord.png", "scaled_stormlord.png", "semi_stormlord.png"):
                     print("[✖] Still not found. Skipping Turn 3.")
                     continue
 
             time.sleep(3)
-            click_pet()
             check_for_exit()
 
             if not click_first_found("enchanted_stormlord.png", "scaled_enchanted_stormlord.png", "semi_enchanted_stormlord.png"):
                 print("[!] Enchanted Storm Lord not found. Moving to player and retrying...")
-                click_pet()
+                hover_eye()
                 time.sleep(1)
                 click_first_found("enchanted_stormlord.png", "scaled_enchanted_stormlord.png", "semi_enchanted_stormlord.png")
 
-        elif turn == 4:
-            if not click_if_found("colossal.png"):
-                print("[!] Colossal not found. Moving to player and retrying...")
-                click_pet()
-                time.sleep(1)
-                if not click_if_found("colossal.png"):
-                    print("[✖] Still not found. Skipping Turn 4.")
-                    continue
 
-            time.sleep(3)
-            click_pet()
+        elif turn == 4:
+            if not press_colossal_then_hover():
+                print("[✖] Colossal not found. Skipping Turn 4.")
+                continue
+
             check_for_exit()
 
             if not click_first_found("bats.png", "scaled_bats.png", "semi_bats.png"):
                 print("[!] Bats not found. Moving to player and retrying...")
-                click_pet()
+                hover_eye()
                 time.sleep(1)
                 if not click_first_found("bats.png", "scaled_bats.png", "semi_bats.png"):
                     print("[✖] Still not found. Skipping Turn 4.")
                     continue
 
             time.sleep(3)
-            click_pet()
             check_for_exit()
 
             if not click_first_found("enchanted_bats.png", "semi_enchanted_bats.png"):
                 print("[!] Enchanted Bats not found. Moving to player and retrying...")
-                click_pet()
+                hover_eye()
                 time.sleep(1)
                 if not click_first_found("enchanted_bats.png", "semi_enchanted_bats.png"):
                     print("[✖] Still not found. Skipping Turn 4.")
                     continue
 
-            time.sleep(3)
-            click_pet()
             click_enemy()
+            time.sleep(20)
+            try:
+                if pyautogui.locateOnScreen(f"{config.ASSET_PATH}book.png", confidence=config.CONFIDENCE):
+                    print("[🏆] Victory detected early (book visible). Skipping to post-battle sequence...")
+                    post_battle_sequence()
+                    print("[🕒] Entering idle mode. Waiting for next battle...")
+                    while True:
+                        check_for_exit()
+                        try:
+                            found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
+                        except pyautogui.ImageNotFoundException:
+                            found = None
+                        if found:
+                            print("[⚔️] New battle detected. Restarting turn logic...")
+                            turn = 1
+                            break
+                        time.sleep(1)
+                    continue
+            except pyautogui.ImageNotFoundException:
+                pass
 
         elif turn == 5:
+            try:
+                if pyautogui.locateOnScreen(f"{config.ASSET_PATH}book.png", confidence=config.CONFIDENCE):
+                    print("[🏆] Victory detected early (book visible). Skipping to post-battle sequence...")
+                    post_battle_sequence()
+                    print("[🕒] Entering idle mode. Waiting for next battle...")
+                    while True:
+                        check_for_exit()
+                        try:
+                            found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
+                        except pyautogui.ImageNotFoundException:
+                            found = None
+                        if found:
+                            print("[⚔️] New battle detected. Restarting turn logic...")
+                            turn = 1
+                            break
+                        time.sleep(1)
+                    continue
+            except pyautogui.ImageNotFoundException:
+                pass
+
+            hover_eye()
             if click_first_found("bats.png", "scaled_bats.png", "enchanted_bats.png"):
                 click_enemy()
+                time.sleep(10)
             else:
                 print("[!] No bats found. Ending early.")
 
             print("[🏁] Scripted turn sequence complete.")
+
+            post_battle_sequence()
+
             print("[🕒] Entering idle mode. Waiting for next battle...")
 
             while True:
@@ -232,10 +276,43 @@ def main():
 
                 time.sleep(1)
 
+
         time.sleep(config.POST_CLICK_DELAY)
         wait_for_turn_ready()
-        turn += 1
+        # Only increment turn if not reset
+        if turn < 5:
+            turn += 1
 
+
+def post_battle_sequence():
+    print("[🔄] Running post-battle sequence...")
+
+    # Step 1: Open menu via ESC key instead of clicking book
+    print("[⌨️] Pressing ESC to open menu...")
+    keyboard.press_and_release('esc')
+    time.sleep(5)
+
+    # Step 2: Click quit
+    if click_if_found("quit.png"):
+        time.sleep(10)
+
+        # Step 3: Click play
+        if click_if_found("play.png"):
+            time.sleep(10)  # Allow loading/healing
+
+        # Step 4: If menu appears, press X to close it
+            try:
+                location = pyautogui.locateOnScreen(f"{config.ASSET_PATH}menu.png", confidence=config.CONFIDENCE)
+                if location:
+                    print("[~] Menu detected. Pressing 'X' key to close.")
+                    keyboard.press_and_release('x')
+                    time.sleep(40)
+            except pyautogui.ImageNotFoundException:
+                pass
+    
+    keyboard.press('up')
+    time.sleep(7)
+    keyboard.release('up')
 
 if __name__ == "__main__":
     main()
