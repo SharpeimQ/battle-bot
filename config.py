@@ -2,7 +2,7 @@
 
 # Paths & Visual Matching
 ASSET_PATH = "assets/"
-CONFIDENCE = 0.5
+CONFIDENCE = 0.65
 
 # Timings
 POST_CLICK_DELAY = 5
