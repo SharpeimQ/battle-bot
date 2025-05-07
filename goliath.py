@@ -1,6 +1,7 @@
 # Auto-install dependencies
 import subprocess, sys
 
+victory_count = 0
 required = ["pyautogui", "keyboard", "pillow"]
 for pkg in required:
     try:
@@ -191,6 +192,8 @@ def main():
     start_time = time.time()
     print("🔃 Bot is starting in idle mode.")
     print("🕒 Waiting for first battle to begin (draw button to appear)...")
+    global victory_count
+    victory_count = 0
 
     while True:
         # ⏱️ Exit after 2 hours
@@ -223,7 +226,8 @@ def main():
         result = wait_for_turn_ready()
         
         if result == "victory":
-            print("[🏁] Scripted turn sequence complete.")
+            victory_count += 1
+            print(f"[🏁] Scripted turn sequence complete. Total victories: {victory_count}")
             post_battle_sequence()
             print("[🕒] Entering idle mode. Waiting for next battle...")
 
