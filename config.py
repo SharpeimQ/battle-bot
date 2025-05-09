@@ -2,6 +2,7 @@
 
 # Paths & Visual Matching
 ASSET_PATH = "assets/"
+ZARA_ASSET = "zara_assets/"
 CONFIDENCE = 0.65
 
 # Timings

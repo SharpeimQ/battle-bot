@@ -1,3 +1,10 @@
+# 1. deathblade1.png -> valkoor
+# 2. deathblade2.png -> valkoor
+# 3. deathblade3.png -> valkoor
+# 4. feint -> zarathrax
+# 5. enchant -> ship
+# 5a. cast enchanted_ship
+
 # Auto-install dependencies
 import subprocess, sys
 
@@ -20,7 +27,7 @@ pyautogui.FAILSAFE = True
 
 def click_if_found(image_name, clicks=1, delay=0.5):
     check_for_exit()
-    path = f"{config.ASSET_PATH}{image_name}"
+    path = f"{config.ZARA_ASSET}{image_name}"
     try:
         location = pyautogui.locateOnScreen(path, confidence=config.CONFIDENCE)
         if location:
@@ -47,12 +54,12 @@ def click_first_found(*image_names):
 
 def click_enemy():
     check_for_exit()
-    image_names = ["goliath3.png", "enemy.png", "enemy_aura.png", "goliath.png", "goliath2.png"]
+    image_names = ["zarathax.png"]
 
     for image_name in image_names:
         try:
             location = pyautogui.locateCenterOnScreen(
-                f"{config.ASSET_PATH}{image_name}",
+                f"{config.ZARA_ASSET}{image_name}",
                 confidence=config.CONFIDENCE
             )
             if location:
@@ -80,11 +87,11 @@ def wait_for_turn_ready():
 
         # Early exit if battle has ended
         try:
-            if pyautogui.locateOnScreen(f"{config.ASSET_PATH}book.png", confidence=config.CONFIDENCE):
+            if pyautogui.locateOnScreen(f"{config.ZARA_ASSET}book.png", confidence=config.CONFIDENCE):
                 print("[🏆] Book detected — battle has ended.")
                 return "victory"
-            elif pyautogui.locateOnScreen(f"{config.ASSET_PATH}pass.png", confidence=config.CONFIDENCE) or \
-                pyautogui.locateOnScreen(f"{config.ASSET_PATH}flee.png", confidence=config.CONFIDENCE):
+            elif pyautogui.locateOnScreen(f"{config.ZARA_ASSET}pass.png", confidence=config.CONFIDENCE) or \
+                pyautogui.locateOnScreen(f"{config.ZARA_ASSET}flee.png", confidence=config.CONFIDENCE):
                 return "continue"
         except pyautogui.ImageNotFoundException:
             pass
@@ -92,7 +99,7 @@ def wait_for_turn_ready():
         # Look for pass or flee indicators
         for indicator in ["pass.png", "flee.png"]:
             try:
-                if pyautogui.locateOnScreen(f"{config.ASSET_PATH}{indicator}", confidence=config.CONFIDENCE):
+                if pyautogui.locateOnScreen(f"{config.ZARA_ASSET}{indicator}", confidence=config.CONFIDENCE):
                     print(f"[+] Turn is ready (detected {indicator}).")
                     return
             except pyautogui.ImageNotFoundException:
@@ -102,7 +109,7 @@ def wait_for_turn_ready():
 
 def hover_eye():
     try:
-        location = pyautogui.locateCenterOnScreen(f"{config.ASSET_PATH}eye.png", confidence=config.CONFIDENCE)
+        location = pyautogui.locateCenterOnScreen(f"{config.ZARA_ASSET}eye.png", confidence=config.CONFIDENCE)
         if location:
             pyautogui.moveTo(location)
             if config.VERBOSE:
@@ -118,68 +125,82 @@ def hover_eye():
             print("[!] eye.png not detected.")
         return False
     
-def press_colossal_then_hover():
-    found = click_if_found("colossal.png")
+# def press_colossal_then_hover():
+#     found = click_if_found("colossal.png")
+#     hover_eye()
+#     time.sleep(1)
+#     return found
+
+def press_strong_then_hover():
+    found = click_if_found("strong.png")
     hover_eye()
     time.sleep(1)
     return found
 
+
 def handle_turn():
     check_for_exit()
 
-    # 1. Hover eye to reset position
+    # 1. Hover eye to reset zoom
     hover_eye()
 
     # 1.5: Worst case scenario — check for any visible card
     has_cards = False
-    card_images = ["darkwind.png", "galvanic.png", "colossal.png", "bats.png"]
+    card_images = [
+        "deathblade1.png", "deathblade2.png", "deathblade3.png",
+        "feint.png", "strong.png", "enchanted_ship.png"
+    ]
 
     for img in card_images:
-        path = f"{config.ASSET_PATH}{img}"
+        path = f"{config.ZARA_ASSET}{img}"
         try:
             result = pyautogui.locateOnScreen(path, confidence=config.CONFIDENCE)
             if result:
                 has_cards = True
                 break
         except Exception as e:
-            print(f"[⚠️] Error checking {img}: {e}")  # optional: remove once stable
+            print(f"[⚠️] Error checking {img}: {e}")
 
     if not has_cards:
         print("[⚠️] No cards detected. Run likely failed. Escaping early...")
         post_battle_sequence()
         return
 
-    # 2. Check darkwind
-    click_first_found("darkwind.png", "darkwind2.png")
+    # 2. Check deathblades → valkoor
+    if click_if_found("deathblade1.png"):
+        hover_eye()
+        click_if_found("valkoor.png")
+        return
 
-    # 3. Check galvanic
-    click_if_found("galvanic.png")
+    if click_if_found("deathblade2.png"):
+        hover_eye()
+        click_if_found("valkoor.png")
+        return
 
-    # 4. Check colossal once, then hover
-    press_colossal_then_hover()
+    if click_if_found("deathblade3.png"):
+        hover_eye()
+        click_if_found("valkoor.png")
+        return
 
-    # 5. Enchant Stormlord
-    found_storm = click_first_found("stormlord.png", "scaled_stormlord.png", "semi_stormlord.png")
+    # 3. Check feint → zarathrax
+    if click_if_found("feint.png"):
+        hover_eye()
+        click_if_found("zarathrax.png")
+        return
 
-    # 6. Enchant Bats if Stormlord casted
-    found_bats = False
-    if not found_storm:
-        found_bats = click_first_found("bats.png", "scaled_bats.png", "semi_bats.png")
+    # 4. Enchant logic → strong.png
+    cast_enchant = press_strong_then_hover()
 
-    # 6. Hover eye (always)
-    hover_eye()
+    # 5. Cast enchanted_ship if enchant was used
+    if cast_enchant:
+        if click_if_found("enchanted_ship.png"):
+            hover_eye()
+        return
 
-    # 7. Cast Enchanted Stormlord or Bats
-    if found_storm:
-        click_first_found("enchanted_stormlord.png", "scaled_enchanted_stormlord.png", "semi_enchanted_stormlord.png")
-    elif found_bats:
-        click_first_found("enchanted_bats.png", "semi_enchanted_bats.png", "scaled_enchanted_bats.png")
-
-    # 8. Final hover to unzoom if needed
-    hover_eye()
-
-    # Final enemy click for Enchanted Bats
-    click_enemy()
+    # 6. Final safeguard: attempt to cast enchanted_ship if still on screen
+    if click_if_found("enchanted_ship.png"):
+        hover_eye()
+        return
 
 
 def check_for_exit():
@@ -203,7 +224,7 @@ def main():
 
         check_for_exit()
         try:
-            found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
+            found = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}flee.png", confidence=config.CONFIDENCE)
         except pyautogui.ImageNotFoundException:
             found = None
 
@@ -235,7 +256,7 @@ def main():
             while True:
                 check_for_exit()
                 try:
-                    found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
+                    found = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}flee.png", confidence=config.CONFIDENCE)
                 except pyautogui.ImageNotFoundException:
                     found = None
 
@@ -274,22 +295,22 @@ def post_battle_sequence():
             break
         time.sleep(1)
 
-    # Step 4: Wait for both menu and hp bar to appear
-    print("[🩺] Waiting for menu and hp bar to appear...")
+    # Step 4: Wait for both menu and health bar to appear
+    print("[🩺] Waiting for menu and health bar to appear...")
     while True:
         check_for_exit()
         try:
-            menu_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}menu.png", confidence=config.CONFIDENCE)
+            menu_visible = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}menu.png", confidence=config.CONFIDENCE)
         except pyautogui.ImageNotFoundException:
             menu_visible = None
 
         try:
-            hp_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}hp.png", confidence=config.CONFIDENCE)
+            health_visible = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}health.png", confidence=config.CONFIDENCE)
         except pyautogui.ImageNotFoundException:
-            hp_visible = None
+            health_visible = None
 
-        if menu_visible and hp_visible:
-            print("[~] Menu and hp bar detected. Pressing 'X' key to close menu.")
+        if menu_visible and health_visible:
+            print("[~] Menu and health bar detected. Pressing 'X' key to close menu.")
             keyboard.press_and_release('x')
             time.sleep(15)
             break
@@ -301,7 +322,7 @@ def post_battle_sequence():
     while True:
         check_for_exit()
         try:
-            if pyautogui.locateOnScreen(f"{config.ASSET_PATH}entrance.png", confidence=config.CONFIDENCE):
+            if pyautogui.locateOnScreen(f"{config.ZARA_ASSET}entrance.png", confidence=config.CONFIDENCE):
                 break
         except pyautogui.ImageNotFoundException:
             pass
