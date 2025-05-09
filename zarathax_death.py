@@ -54,7 +54,7 @@ def click_first_found(*image_names):
 
 def click_enemy():
     check_for_exit()
-    image_names = ["zarathax.png"]
+    image_names = ["zarathax.png", "merc.png"]
 
     for image_name in image_names:
         try:
@@ -148,7 +148,7 @@ def handle_turn():
     has_cards = False
     card_images = [
         "deathblade1.png", "deathblade2.png", "deathblade3.png",
-        "feint.png", "strong.png", "enchanted_ship.png"
+        "feint.png", "strong.png", "enchanted_ship.png", "enchanted_vampire.png", "vampire.png"
     ]
 
     for img in card_images:
@@ -188,13 +188,32 @@ def handle_turn():
         click_if_found("zarathax.png")
         return
 
-    # 4. Enchant logic → strong.png -> ship -> enchanted_ship
-    cast_enchant = press_strong_then_hover()
+    # 4. Check colossal once, then hover
+    press_strong_then_hover()
 
+    # 5. Enchant Ship
     found_ship = click_first_found("ship.png")
+
+    # 6. Enchant Vampire if Ship casted
+    found_vampire = False
+    if not found_ship:
+        found_vampire = click_first_found("vampire.png")
+
+    # 6. Hover eye (always)
     hover_eye()
-    time.sleep(2)
+
     click_first_found("enchanted_ship.png")
+    # 7. Cast Enchanted Ship or Vampire
+    if found_ship:
+        click_first_found("enchanted_ship.png")
+    elif found_vampire:
+        click_first_found("enchanted_vampire.png")
+
+    # 8. Final hover to unzoom if needed
+    hover_eye()
+
+    # Final enemy click for Enchanted Vampire
+    click_enemy()
 
 
 def check_for_exit():
@@ -235,7 +254,8 @@ def main():
 
         elapsed = time.time() - start_time
         elapsed_fmt = time.strftime("%H:%M:%S", time.gmtime(elapsed))
-        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} ===")
+        spells = victory_count * 14
+        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} | Spells: {spells} ===")
 
         handle_turn()
 
