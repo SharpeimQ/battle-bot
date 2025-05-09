@@ -295,6 +295,17 @@ def post_battle_sequence():
             break
         time.sleep(1)
 
+    # Step 3.5: Check for low mana and click potion if needed
+    print("[🧪] Checking for low mana...")
+    try:
+        low_mana = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}low_mana.png", confidence=config.CONFIDENCE)
+        if low_mana:
+            print("[🔋] Low mana detected. Clicking potion...")
+            click_if_found("potion.png")
+            time.sleep(1)
+    except Exception as e:
+        print(f"[⚠️] Error checking low_mana.png: {e}")
+
     # Step 4: Wait for both menu and health bar to appear
     print("[🩺] Waiting for menu and health bar to appear...")
     while True:
@@ -315,6 +326,22 @@ def post_battle_sequence():
             time.sleep(15)
             break
 
+        time.sleep(1)
+
+    # Step 4.5: Wait for dialogue.png to appear, then press space twice
+    print("[💬] Waiting for dialogue to appear...")
+    while True:
+        check_for_exit()
+        try:
+            dialogue = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}dialogue.png", confidence=config.CONFIDENCE)
+            if dialogue:
+                print("[📖] Dialogue detected. Pressing space twice...")
+                keyboard.press_and_release('space')
+                time.sleep(0.5)
+                keyboard.press_and_release('space')
+                break
+        except Exception as e:
+            print(f"[⚠️] Error checking dialogue.png: {e}")
         time.sleep(1)
 
     # Step 5: Wait for entrance.png to confirm spawn reset, then walk forward
