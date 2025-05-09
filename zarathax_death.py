@@ -172,10 +172,10 @@ def handle_turn():
         click_if_found("valkoor.png")
         return
 
-    if click_if_found("deathblade2.png"):
-        hover_eye()
-        click_if_found("valkoor.png")
-        return
+    # if click_if_found("deathblade2.png"):
+    #     hover_eye()
+    #     click_if_found("valkoor.png")
+    #     return
 
     if click_if_found("deathblade3.png"):
         hover_eye()
@@ -185,22 +185,16 @@ def handle_turn():
     # 3. Check feint → zarathrax
     if click_if_found("feint.png"):
         hover_eye()
-        click_if_found("zarathrax.png")
+        click_if_found("zarathax.png")
         return
 
-    # 4. Enchant logic → strong.png
+    # 4. Enchant logic → strong.png -> ship -> enchanted_ship
     cast_enchant = press_strong_then_hover()
 
-    # 5. Cast enchanted_ship if enchant was used
-    if cast_enchant:
-        if click_if_found("enchanted_ship.png"):
-            hover_eye()
-        return
-
-    # 6. Final safeguard: attempt to cast enchanted_ship if still on screen
-    if click_if_found("enchanted_ship.png"):
-        hover_eye()
-        return
+    found_ship = click_first_found("ship.png")
+    hover_eye()
+    time.sleep(2)
+    click_first_found("enchanted_ship.png")
 
 
 def check_for_exit():
@@ -217,11 +211,6 @@ def main():
     victory_count = 0
 
     while True:
-        # ⏱️ Exit after 2 hours
-        if time.time() - start_time > 2 * 60 * 60:
-            print("[⏱️] Time limit reached. Exiting bot after 2 hours.")
-            sys.exit(0)
-
         check_for_exit()
         try:
             found = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}flee.png", confidence=config.CONFIDENCE)
@@ -239,8 +228,15 @@ def main():
 
     while True:
         check_for_exit()
-        print(f"\n=== TURN {turn} ===")
-        
+        # ⏱️ Exit after 2 hours
+        if time.time() - start_time > 2 * 60 * 60:
+            print("[⏱️] Time limit reached. Exiting bot after 2 hours.")
+            sys.exit(0)
+
+        elapsed = time.time() - start_time
+        elapsed_fmt = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} ===")
+
         handle_turn()
 
         # Wait for the next turn or detect end of battle
@@ -285,7 +281,7 @@ def post_battle_sequence():
         check_for_exit()
         if click_if_found("quit.png"):
             break
-        time.sleep(1)
+        time.sleep(2)
 
     # Step 3: Wait until "play" is found and click it
     print("[▶️] Waiting for play button to appear...")
@@ -293,7 +289,7 @@ def post_battle_sequence():
         check_for_exit()
         if click_if_found("play.png"):
             break
-        time.sleep(1)
+        time.sleep(5)
 
     # Step 3.5: Check for low mana and click potion if needed
     print("[🧪] Checking for low mana...")
@@ -306,8 +302,8 @@ def post_battle_sequence():
     except Exception as e:
         print(f"[⚠️] Error checking low_mana.png: {e}")
 
-    # Step 4: Wait for both menu and health bar to appear
-    print("[🩺] Waiting for menu and health bar to appear...")
+    # Step 4: Wait for both menu and hp bar to appear
+    print("[🩺] Waiting for menu and hp bar to appear...")
     while True:
         check_for_exit()
         try:
@@ -316,12 +312,12 @@ def post_battle_sequence():
             menu_visible = None
 
         try:
-            health_visible = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}health.png", confidence=config.CONFIDENCE)
+            hp_visible = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}hp.png", confidence=config.CONFIDENCE)
         except pyautogui.ImageNotFoundException:
-            health_visible = None
+            hp_visible = None
 
-        if menu_visible and health_visible:
-            print("[~] Menu and health bar detected. Pressing 'X' key to close menu.")
+        if menu_visible and hp_visible:
+            print("[~] Menu and hp bar detected. Pressing 'X' key to close menu.")
             keyboard.press_and_release('x')
             time.sleep(15)
             break

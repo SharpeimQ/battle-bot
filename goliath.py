@@ -196,11 +196,6 @@ def main():
     victory_count = 0
 
     while True:
-        # ⏱️ Exit after 2 hours
-        if time.time() - start_time > 2 * 60 * 60:
-            print("[⏱️] Time limit reached. Exiting bot after 2 hours.")
-            sys.exit(0)
-
         check_for_exit()
         try:
             found = pyautogui.locateOnScreen(f"{config.ASSET_PATH}draw_button.png", confidence=config.CONFIDENCE)
@@ -218,8 +213,15 @@ def main():
 
     while True:
         check_for_exit()
-        print(f"\n=== TURN {turn} ===")
-        
+        # ⏱️ Exit after 2 hours
+        if time.time() - start_time > 2 * 60 * 60:
+            print("[⏱️] Time limit reached. Exiting bot after 2 hours.")
+            sys.exit(0)
+
+        elapsed = time.time() - start_time
+        elapsed_fmt = time.strftime("%H:%M:%S", time.gmtime(elapsed))
+        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} ===")
+
         handle_turn()
 
         # Wait for the next turn or detect end of battle
