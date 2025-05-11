@@ -344,31 +344,32 @@ def post_battle_sequence():
 
         time.sleep(1)
 
-    # Step 4.5: Wait for dialogue.png to appear, then press space twice
-    print("[💬] Waiting for dialogue to appear...")
+    print("[💬] Waiting for dialogue or entrance confirmation...")
     while True:
         check_for_exit()
         try:
-            dialogue = pyautogui.locateOnScreen(f"{config.ZARA_ASSET}dialogue.png", confidence=config.CONFIDENCE)
+            dialogue = pyautogui.locateOnScreen(f"{config.ASSET_PATH}dialogue.png", confidence=config.CONFIDENCE)
             if dialogue:
-                print("[📖] Dialogue detected. Pressing space twice...")
+                print("[🗨️] Dialogue detected. Pressing space twice...")
                 keyboard.press_and_release('space')
                 time.sleep(0.5)
                 keyboard.press_and_release('space')
                 break
+        except pyautogui.ImageNotFoundException:
+            pass
         except Exception as e:
             print(f"[⚠️] Error checking dialogue.png: {e}")
-        time.sleep(1)
 
-    # Step 5: Wait for entrance.png to confirm spawn reset, then walk forward
-    print("[🚶] Waiting for entrance confirmation...")
-    while True:
-        check_for_exit()
         try:
-            if pyautogui.locateOnScreen(f"{config.ZARA_ASSET}entrance.png", confidence=config.CONFIDENCE):
+            entrance = pyautogui.locateOnScreen(f"{config.ASSET_PATH}entrance.png", confidence=config.CONFIDENCE)
+            if entrance:
+                print("[➡️] Entrance detected without dialogue. Proceeding...")
                 break
         except pyautogui.ImageNotFoundException:
             pass
+        except Exception as e:
+            print(f"[⚠️] Error checking entrance.png: {e}")
+
         time.sleep(1)
 
     print("[➡️] Entrance detected. Walking forward to reset location...")
