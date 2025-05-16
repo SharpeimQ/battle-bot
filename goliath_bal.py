@@ -132,7 +132,7 @@ def handle_turn():
 
     # 1.5: Worst case scenario — check for any visible card
     has_cards = False
-    card_images = ["bal_blade.png", "berserk.png", "colossal.png", "judge.png"]
+    card_images = ["bal_blade.png", "power.png", "punishment.png", "judgement.png", "enchanted_judgement.png"]
 
     for img in card_images:
         path = f"{config.ASSET_PATH}{img}"
@@ -153,8 +153,9 @@ def handle_turn():
     click_first_found("bal_blade.png")
     click_first_found("hunter.png")
 
-    # 3. Check berserk
-    click_if_found("berserk.png")
+    # 3. Check power then punishment
+    click_if_found("power.png")
+    click_if_found("punishment.png")
 
     # 4. Check colossal once, then hover
     press_colossal_then_hover()
@@ -162,24 +163,24 @@ def handle_turn():
     # 5. Enchant nova
     found_nova = click_first_found("nova.png")
 
-    # 6. Enchant judge if nova casted
-    found_judge = False
+    # 6. Enchant judgement if nova casted
+    found_judgement = False
     if not found_nova:
-        found_judge = click_first_found("judge.png")
+        found_judgement = click_first_found("judgement.png")
 
     # 6. Hover eye (always)
     hover_eye()
 
-    # 7. Cast Enchanted nova or judge
+    # 7. Cast Enchanted nova or judgement
     if found_nova:
         click_first_found("enchanted_nova.png")
-    elif found_judge:
-        click_first_found("enchanted_judge.png")
+    elif found_judgement:
+        click_first_found("enchanted_judgement.png")
 
     # 8. Final hover to unzoom if needed
     hover_eye()
 
-    # Final enemy click for Enchanted judge
+    # Final enemy click for Enchanted judgement
     click_enemy()
     click_first_found("enchanted_nova.png")
     click_first_found("pass.png")
@@ -290,7 +291,7 @@ def post_battle_sequence():
             menu_visible = None
 
         try:
-            hp_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}life_health.png", confidence=config.CONFIDENCE)
+            hp_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}bal_hp.png", confidence=config.CONFIDENCE)
         except pyautogui.ImageNotFoundException:
             hp_visible = None
 
