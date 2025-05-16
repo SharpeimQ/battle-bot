@@ -47,7 +47,7 @@ def click_first_found(*image_names):
 
 def click_enemy():
     check_for_exit()
-    image_names = ["zarathax.png"]
+    image_names = ["zarathax.png", "merc.png"]
 
     for image_name in image_names:
         try:
@@ -178,7 +178,9 @@ def handle_turn():
     hover_eye()
 
     click_first_found("enchanted_forest.png")
+    hover_eye()
     click_enemy()
+    hover_eye()
     click_first_found("pass.png")
 
 def check_for_exit():
