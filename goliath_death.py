@@ -301,7 +301,6 @@ def post_battle_sequence():
         time.sleep(1)
 
     # Step 3.75: If no_mana.png, low_mana.png, or low_mana2.png appears, click potion.png
-        # Step 3.75: If no_mana.png, low_mana.png, or low_mana2.png appears, click potion.png
     print("[🧪] Checking if mana is low...")
 
     mana_warnings = ["no_mana.png", "low_mana.png", "low_mana2.png"]
