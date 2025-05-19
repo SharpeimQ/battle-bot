@@ -285,22 +285,31 @@ def post_battle_sequence():
     start_time = time.time()
     crown_closed = False
 
-    while time.time() - start_time < 6:
+    # Step 3.5: If crown shop opens (crownshop.png), close it by pressing ESC twice
+    print("[💰] Checking for crown shop popup over the next few seconds...")
+
+    start_time = time.time()
+    crown_closed = False
+
+    while time.time() - start_time < 10:
         check_for_exit()
         try:
             shop_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}crownshop.png", confidence=config.CONFIDENCE)
             if shop_visible:
-                print("[👁️] Crown shop detected.")
-                time.sleep(3)
-                if click_if_found("crownshop_close.png"):
-                    print("[✖️] Crown shop closed via close button.")
-                    crown_closed = True
-                    break
-                else:
-                    print("[!] Close button not found yet. Retrying...")
+                print("[👁️] Crown shop detected. Pressing ESC twice to close.")
+                time.sleep(3)  # Give the shop time to fully load
+                keyboard.press_and_release('esc')
+                time.sleep(0.5)
+                keyboard.press_and_release('esc')
+                crown_closed = True
+                break
         except pyautogui.ImageNotFoundException:
             pass
         time.sleep(0.5)
+
+    if not crown_closed and config.VERBOSE:
+        print("[~] Crown shop was not detected or failed to close.")
+
 
     if not crown_closed and config.VERBOSE:
         print("[~] Crown shop was not detected or failed to close.")
@@ -313,7 +322,7 @@ def post_battle_sequence():
 
     for warning in mana_warnings:
         try:
-            if pyautogui.locateOnScreen(f"{config.ASSET_PATH}{warning}", confidence=config.CONFIDENCE):
+            if pyautogui.locateOnScreen(f"{config.ASSET_PATH}{warning}", confidence=0.80):
                 print(f"[⚠️] Mana warning detected: {warning}")
                 mana_low = True
                 break
