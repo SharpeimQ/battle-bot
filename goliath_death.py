@@ -279,26 +279,30 @@ def post_battle_sequence():
         if click_if_found("play.png"):
             break
 
-    # Step 3.5: If crown shop opens (crownshop.png), close it by clicking it (sometimes appears after "Play")
+    # Step 3.5: If crown shop opens (crownshop.png), close it by clicking crownshop_close.png
     print("[💰] Checking for crown shop popup over the next few seconds...")
 
     start_time = time.time()
     crown_closed = False
 
-    while time.time() - start_time < 10:  # check for up to 6 seconds
+    while time.time() - start_time < 6:
         check_for_exit()
         try:
-            if click_if_found("crownshop.png"):
-                print("[✖️] Crown shop detected and closed.")
-                crown_closed = True
-                break
+            shop_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}crownshop.png", confidence=config.CONFIDENCE)
+            if shop_visible:
+                print("[👁️] Crown shop detected.")
+                if click_if_found("crownshop_close.png"):
+                    print("[✖️] Crown shop closed via close button.")
+                    crown_closed = True
+                    break
+                else:
+                    print("[!] Close button not found yet. Retrying...")
         except pyautogui.ImageNotFoundException:
             pass
         time.sleep(0.5)
 
     if not crown_closed and config.VERBOSE:
-        print("[~] Crown shop was not detected after play.")
-        time.sleep(1)
+        print("[~] Crown shop was not detected or failed to close.")
 
     # Step 3.75: If no_mana.png, low_mana.png, or low_mana2.png appears, click potion.png
     print("[🧪] Checking if mana is low...")
