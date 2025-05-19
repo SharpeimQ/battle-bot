@@ -291,6 +291,7 @@ def post_battle_sequence():
             shop_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}crownshop.png", confidence=config.CONFIDENCE)
             if shop_visible:
                 print("[👁️] Crown shop detected.")
+                time.sleep(3)
                 if click_if_found("crownshop_close.png"):
                     print("[✖️] Crown shop closed via close button.")
                     crown_closed = True
