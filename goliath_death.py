@@ -2,6 +2,7 @@
 import subprocess, sys
 
 victory_count = 0
+attempt_count = 0
 required = ["pyautogui", "keyboard", "pillow"]
 for pkg in required:
     try:
@@ -157,7 +158,8 @@ def handle_turn():
             print(f"[⚠️] Error checking {img}: {e}")  # optional: remove once stable
 
     if not has_cards:
-        print("[⚠️] No cards detected. Run likely failed. Escaping early...")
+        attempt_count += 1
+        print("[⚠️] No cards detected. Run likely failed. Escaping early... Attempts: {attempt_count}")
         post_battle_sequence()
         return
 
@@ -226,7 +228,9 @@ def main():
     print("🔃 Bot is starting in idle mode.")
     print("🕒 Waiting for first battle to begin (draw button to appear)...")
     global victory_count
+    global attempt_count
     victory_count = 0
+    attempt_count = 0
 
     while True:
         check_for_exit()
@@ -253,7 +257,7 @@ def main():
 
         elapsed = time.time() - start_time
         elapsed_fmt = time.strftime("%H:%M:%S", time.gmtime(elapsed))
-        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} ===")
+        print(f"\n=== TURN {turn} | Elapsed: {elapsed_fmt} | Victories: {victory_count} | Attempts: {attempt_count} ===")
 
         handle_turn()
 
@@ -262,7 +266,8 @@ def main():
         
         if result == "victory":
             victory_count += 1
-            print(f"[🏁] Scripted turn sequence complete. Total victories: {victory_count}")
+            attempt_count += 1
+            print(f"[🏁] Scripted turn sequence complete. Total victories: {victory_count}: Attempts: {attempt_count}")
             post_battle_sequence()
             print("[🕒] Entering idle mode. Waiting for next battle...")
 
@@ -320,7 +325,7 @@ def post_battle_sequence():
     start_time = time.time()
     crown_closed = False
 
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 7:
         check_for_exit()
         try:
             shop_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}crownshop.png", confidence=config.CONFIDENCE)
@@ -339,25 +344,16 @@ def post_battle_sequence():
     if not crown_closed and config.VERBOSE:
         print("[~] Crown shop was not detected or failed to close.")
 
-    # Step 3.75: If no_mana.png, low_mana.png, or low_mana2.png appears, click potion.png
-    print("[🧪] Checking if mana is low...")
+    # Step 3.75: Every 57 attempts, auto-click potion.png (no image check)
+    if attempt_count > 0 and attempt_count % 57 == 0:
+        print(f"[🧪] Auto potion triggered on attempt {attempt_count}...")
 
-    mana_warnings = ["no_mana.png"]
-    mana_low = False
-
-    for warning in mana_warnings:
-        try:
-            if pyautogui.locateOnScreen(f"{config.ASSET_PATH}{warning}", confidence=0.80):
-                print(f"[⚠️] Mana warning detected: {warning}")
-                mana_low = True
-                break
-        except pyautogui.ImageNotFoundException:
-            continue
-
-    if mana_low:
-        print("[🍷] Using potion to refill mana...")
         click_if_found("potion.png")
-        time.sleep(1)
+        if click_if_found("potion.png"):
+            print("[🍷] Potion clicked successfully.")
+            time.sleep(1)
+        else:
+            print("[⚠️] Potion not found on screen.")
 
     # Step 4: Wait for both menu and hp bar to appear
     print("[🩺] Waiting for menu and hp bar to appear...")
