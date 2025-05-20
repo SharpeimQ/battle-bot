@@ -124,6 +124,18 @@ def press_colossal_then_hover():
     time.sleep(1)
     return found
 
+def press_sharpen_then_hover():
+    found = click_if_found("sharpen.png")
+    hover_eye()
+    time.sleep(1)
+    return found
+
+def press_potent_then_hover():
+    found = click_if_found("potent.png")
+    hover_eye()
+    time.sleep(1)
+    return found
+
 def handle_turn():
     check_for_exit()
 
@@ -159,12 +171,23 @@ def handle_turn():
         click_if_found("goliath3.png")
         return
     
-    if click_if_found("feint.png"):
+    if click_if_found("item_feint.png"):
         hover_eye()
         click_if_found("goliath3.png")
         return
-
-    if click_if_found("dark_pact.png"):
+    
+    # press_potent_then_hover()
+    # click_first_found("feint.png")
+    # hover_eye()
+    # if click_if_found("potent_feint.png"):
+    #     hover_eye()
+    #     click_if_found("goliath3.png")
+    #     return
+    
+    press_sharpen_then_hover()
+    click_first_found("dark_pact.png")
+    hover_eye()
+    if click_if_found("sharpened_pact.png"):
         hover_eye()
         click_if_found("valkoor.png")
         return
@@ -182,6 +205,12 @@ def handle_turn():
     click_first_found("enchanted_crow.png")
     hover_eye()
     click_first_found("enchanted_crow.png")
+
+    # press_colossal_then_hover()
+    # click_first_found("lep.png")
+    # hover_eye()
+    # click_first_found("enchanted_lep.png")
+    # click_enemy()
 
     click_first_found("pass.png")
 
@@ -305,11 +334,7 @@ def post_battle_sequence():
                 break
         except pyautogui.ImageNotFoundException:
             pass
-        time.sleep(0.5)
-
-    if not crown_closed and config.VERBOSE:
-        print("[~] Crown shop was not detected or failed to close.")
-
+        time.sleep(1)
 
     if not crown_closed and config.VERBOSE:
         print("[~] Crown shop was not detected or failed to close.")
@@ -317,7 +342,7 @@ def post_battle_sequence():
     # Step 3.75: If no_mana.png, low_mana.png, or low_mana2.png appears, click potion.png
     print("[🧪] Checking if mana is low...")
 
-    mana_warnings = ["no_mana.png", "low_mana.png", "low_mana2.png"]
+    mana_warnings = ["no_mana.png"]
     mana_low = False
 
     for warning in mana_warnings:
