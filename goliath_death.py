@@ -3,6 +3,7 @@ import subprocess, sys
 
 victory_count = 0
 attempt_count = 0
+conversion_count = 0
 required = ["pyautogui", "keyboard", "pillow"]
 for pkg in required:
     try:
@@ -45,6 +46,23 @@ def click_first_found(*image_names):
         if click_if_found(name):
             return True
     return False
+
+def if_found(image_name):
+    """
+    Checks if the given image exists on the screen without clicking it.
+    Returns True if found, False otherwise.
+    """
+    check_for_exit()
+    path = f"{config.ASSET_PATH}{image_name}"
+    try:
+        location = pyautogui.locateOnScreen(path, confidence=config.CONFIDENCE)
+        if location:
+            if config.VERBOSE:
+                print(f"[~] Found {image_name} on screen.")
+            return True
+        return False
+    except pyautogui.ImageNotFoundException:
+        return False
 
 def click_enemy():
     check_for_exit()
@@ -138,6 +156,8 @@ def press_potent_then_hover():
     return found
 
 def handle_turn():
+    global attempt_count
+    global conversion_count
     check_for_exit()
 
     # 1. Hover eye to reset position
@@ -145,7 +165,7 @@ def handle_turn():
 
     # 1.5: Worst case scenario — check for any visible card
     has_cards = False
-    card_images = ["dark_pact.png", "colossal.png", "crow.png", "enchanted_crow.png", "death_prism.png", "death_blade.png", "feint.png"]
+    card_images = ["dark_pact.png", "crow.png", "enchanted_crow.png", "death_prism.png", "death_blade.png", "feint.png", "vamp.png", "enchanted_vamp.png"]
 
     for img in card_images:
         path = f"{config.ASSET_PATH}{img}"
@@ -159,37 +179,39 @@ def handle_turn():
 
     if not has_cards:
         attempt_count += 1
-        print("[⚠️] No cards detected. Run likely failed. Escaping early... Attempts: {attempt_count}")
+        conversion_count = 0
+        print("[⚠️] No cards detected. Run likely failed. Escaping early...")
         post_battle_sequence()
         return
 
-    if click_if_found("death_blade.png"):
+    if if_found("death_prism.png") and conversion_count < 1:
+        click_if_found("death_prism.png")
+        hover_eye()
+        click_enemy()
+        conversion_count += 1
+        return
+    
+    if click_first_found("item_feint.png", "feint.png"):
+        hover_eye()
+        click_enemy()
+        return
+    
+    if click_if_found("reinforce.png"):
+        hover_eye()
+        click_if_found("valkoor.png")
+        return
+    
+    if click_if_found("reinforce.png"):
         hover_eye()
         click_if_found("valkoor.png")
         return
 
-    if click_if_found("death_prism.png"):
+    if click_if_found("dark_pact.png"):
         hover_eye()
-        click_if_found("goliath3.png")
+        click_if_found("valkoor.png")
         return
     
-    if click_if_found("item_feint.png"):
-        hover_eye()
-        click_if_found("goliath3.png")
-        return
-    
-    # press_potent_then_hover()
-    # click_first_found("feint.png")
-    # hover_eye()
-    # if click_if_found("potent_feint.png"):
-    #     hover_eye()
-    #     click_if_found("goliath3.png")
-    #     return
-    
-    press_sharpen_then_hover()
-    click_first_found("dark_pact.png")
-    hover_eye()
-    if click_if_found("sharpened_pact.png"):
+    if click_if_found("dark_pact.png"):
         hover_eye()
         click_if_found("valkoor.png")
         return
@@ -200,19 +222,41 @@ def handle_turn():
     # 5. Enchant crow
     found_crow = click_first_found("crow.png")
 
+    # 6. Enchant vamp if crow casted
+    found_vamp = False
+    if not found_crow:
+        found_vamp = click_first_found("vamp.png")
+
+    # 6. Hover eye (always)
+    hover_eye()
+
+    # 7. Cast Enchanted crow or second convert
+    if found_crow:
+        click_first_found("enchanted_crow.png")
+    elif found_vamp:
+        click_first_found("death_prism.png")
+        hover_eye()
+        click_enemy()
+
     # 6. Hover eye (always)
     hover_eye()
     click_first_found("enchanted_crow.png")
     hover_eye()
     click_first_found("enchanted_crow.png")
     hover_eye()
-    click_first_found("enchanted_crow.png")
+    click_first_found("enchanted_vamp.png")
+    hover_eye()
+    click_enemy()
+    click_first_found("enchanted_vamp.png")
+    hover_eye()
+    click_enemy()
 
+    # 4. Check colossal once, then hover
     # press_colossal_then_hover()
-    # click_first_found("lep.png")
+    # click_first_found("crow.png")
     # hover_eye()
-    # click_first_found("enchanted_lep.png")
-    # click_enemy()
+    # press_colossal_then_hover()
+    # click_first_found("crow.png")
 
     click_first_found("pass.png")
 
@@ -265,8 +309,10 @@ def main():
         result = wait_for_turn_ready()
         
         if result == "victory":
+            global conversion_count
             victory_count += 1
             attempt_count += 1
+            conversion_count = 0
             print(f"[🏁] Scripted turn sequence complete. Total victories: {victory_count}: Attempts: {attempt_count}")
             post_battle_sequence()
             print("[🕒] Entering idle mode. Waiting for next battle...")
@@ -292,6 +338,7 @@ def main():
 
 
 def post_battle_sequence():
+    global attempt_count
     print("[🔄] Running post-battle sequence...")
 
     # Step 1: Open menu via ESC key instead of clicking book
@@ -325,7 +372,7 @@ def post_battle_sequence():
     start_time = time.time()
     crown_closed = False
 
-    while time.time() - start_time < 7:
+    while time.time() - start_time < 8:
         check_for_exit()
         try:
             shop_visible = pyautogui.locateOnScreen(f"{config.ASSET_PATH}crownshop.png", confidence=config.CONFIDENCE)
